@@ -6,6 +6,10 @@ const Product = require('../models/Product');
 const { isDbConnected } = require('../db');
 
 const dataFilePath = path.join(__dirname, '../data/products.json');
+// On Vercel (or any read-only FS), fall back to /tmp for JSON writes
+const writableDataFilePath = process.env.VERCEL
+  ? '/tmp/products.json'
+  : dataFilePath;
 
 function stripMongo(doc) {
   const { _id, __v, createdAt, updatedAt, ...rest } = doc;
@@ -33,23 +37,21 @@ async function readProducts() {
 
 async function saveProducts(products) {
   if (isDbConnected()) {
-    try {
-      const ops = products.map(p => ({
-        updateOne: {
-          filter: { id: p.id },
-          update: { $set: p },
-          upsert: true
-        }
-      }));
-      await Product.bulkWrite(ops);
-      return true;
-    } catch (err) {
-      console.error('Error saving products to MongoDB:', err);
-    }
+    // MongoDB is primary — do NOT fall through to JSON on failure
+    const ops = products.map(p => ({
+      updateOne: {
+        filter: { id: p.id },
+        update: { $set: p },
+        upsert: true
+      }
+    }));
+    await Product.bulkWrite(ops); // throws on error — caught by caller
+    return true;
   }
 
+  // JSON fallback (local dev only — on Vercel use /tmp to avoid EROFS)
   try {
-    fs.writeFileSync(dataFilePath, JSON.stringify(products, null, 2), 'utf8');
+    fs.writeFileSync(writableDataFilePath, JSON.stringify(products, null, 2), 'utf8');
     return true;
   } catch (err) {
     console.error('Error saving products data file:', err);
@@ -59,20 +61,19 @@ async function saveProducts(products) {
 
 async function deleteProductById(id) {
   if (isDbConnected()) {
-    try {
-      const result = await Product.deleteOne({ id });
-      return result.deletedCount > 0;
-    } catch (err) {
-      console.error('Error deleting product from MongoDB:', err);
-    }
+    const result = await Product.deleteOne({ id }); // throws on error
+    return result.deletedCount > 0;
   }
 
   try {
-    const products = JSON.parse(fs.readFileSync(dataFilePath, 'utf8'));
+    const raw = fs.existsSync(writableDataFilePath)
+      ? fs.readFileSync(writableDataFilePath, 'utf8')
+      : fs.readFileSync(dataFilePath, 'utf8');
+    const products = JSON.parse(raw);
     const index = products.findIndex(p => p.id === id);
     if (index === -1) return false;
     products.splice(index, 1);
-    fs.writeFileSync(dataFilePath, JSON.stringify(products, null, 2), 'utf8');
+    fs.writeFileSync(writableDataFilePath, JSON.stringify(products, null, 2), 'utf8');
     return true;
   } catch (err) {
     console.error('Error deleting product from data file:', err);
@@ -242,81 +243,66 @@ exports.createProduct = async (req, res) => {
 
 // PUT /api/v1/products/:id
 exports.updateProduct = async (req, res) => {
-  const products = await readProducts();
-  const id = parseInt(req.params.id, 10);
-  const index = products.findIndex(p => p.id === id);
+  try {
+    const products = await readProducts();
+    const id = parseInt(req.params.id, 10);
+    const index = products.findIndex(p => p.id === id);
 
-  if (index === -1) {
-    return res.status(404).json({
-      success: false,
-      error: 'Product not found'
-    });
-  }
-
-  const existing = products[index];
-  const {
-    name,
-    price,
-    originalPrice,
-    discount,
-    category,
-    images,
-    shortDescription,
-    fullDescription,
-    features,
-    specs,
-    variants,
-    availability,
-    rating,
-    reviewsCount
-  } = req.body;
-
-  const newPrice = price !== undefined ? parseFloat(price) : existing.price;
-  const newOrigPrice = originalPrice !== undefined ? parseFloat(originalPrice) : existing.originalPrice;
-
-  let finalDiscount = discount !== undefined ? discount.trim() : existing.discount;
-
-  // Auto-calculate discount percentage if original price > price
-  if (newOrigPrice > newPrice && newOrigPrice > 0) {
-    if (!finalDiscount || finalDiscount.endsWith('% OFF') || finalDiscount.endsWith('% off') || finalDiscount === 'SPECIAL' || discount !== undefined) {
-      const pct = Math.round(((newOrigPrice - newPrice) / newOrigPrice) * 100);
-      finalDiscount = `${pct}% OFF`;
+    if (index === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'Product not found'
+      });
     }
+
+    const existing = products[index];
+    const {
+      name, price, originalPrice, discount, category,
+      images, shortDescription, fullDescription, features,
+      specs, variants, availability, rating, reviewsCount
+    } = req.body;
+
+    const newPrice = price !== undefined ? parseFloat(price) : existing.price;
+    const newOrigPrice = originalPrice !== undefined ? parseFloat(originalPrice) : existing.originalPrice;
+    let finalDiscount = discount !== undefined ? discount.trim() : existing.discount;
+
+    if (newOrigPrice > newPrice && newOrigPrice > 0) {
+      if (!finalDiscount || finalDiscount.endsWith('% OFF') || finalDiscount.endsWith('% off') || finalDiscount === 'SPECIAL' || discount !== undefined) {
+        const pct = Math.round(((newOrigPrice - newPrice) / newOrigPrice) * 100);
+        finalDiscount = `${pct}% OFF`;
+      }
+    }
+
+    const updatedProduct = {
+      ...existing,
+      ...(name && { name: name.trim() }),
+      price: newPrice,
+      originalPrice: newOrigPrice,
+      discount: finalDiscount,
+      ...(category && { category: category.trim() }),
+      ...(images && { images: Array.isArray(images) ? images : images.split(',').map(i => i.trim()).filter(Boolean) }),
+      ...(shortDescription && { shortDescription }),
+      ...(fullDescription && { fullDescription }),
+      ...(features && { features: Array.isArray(features) ? features : features.split('\n').map(f => f.trim()).filter(Boolean) }),
+      ...(specs && { specs }),
+      ...(variants && { variants }),
+      ...(availability && { availability }),
+      ...(rating !== undefined && { rating: parseFloat(rating) }),
+      ...(reviewsCount !== undefined && { reviewsCount: parseInt(reviewsCount, 10) })
+    };
+
+    products[index] = updatedProduct;
+    const saved = await saveProducts(products);
+
+    if (!saved) {
+      return res.status(500).json({ success: false, error: 'Failed to save product.' });
+    }
+
+    res.json({ success: true, message: 'Product updated successfully', data: updatedProduct });
+  } catch (err) {
+    console.error('updateProduct error:', err);
+    res.status(500).json({ success: false, error: err.message || 'Internal server error' });
   }
-
-  const updatedProduct = {
-    ...existing,
-    ...(name && { name: name.trim() }),
-    price: newPrice,
-    originalPrice: newOrigPrice,
-    discount: finalDiscount,
-    ...(category && { category: category.trim() }),
-    ...(images && { images: Array.isArray(images) ? images : images.split(',').map(i=>i.trim()).filter(Boolean) }),
-    ...(shortDescription && { shortDescription }),
-    ...(fullDescription && { fullDescription }),
-    ...(features && { features: Array.isArray(features) ? features : features.split('\n').map(f=>f.trim()).filter(Boolean) }),
-    ...(specs && { specs }),
-    ...(variants && { variants }),
-    ...(availability && { availability }),
-    ...(rating !== undefined && { rating: parseFloat(rating) }),
-    ...(reviewsCount !== undefined && { reviewsCount: parseInt(reviewsCount, 10) })
-  };
-
-  products[index] = updatedProduct;
-  const saved = await saveProducts(products);
-
-  if (!saved) {
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to write product to file.'
-    });
-  }
-
-  res.json({
-    success: true,
-    message: 'Product updated successfully',
-    data: updatedProduct
-  });
 };
 
 // DELETE /api/v1/products/:id
