@@ -58,13 +58,14 @@ jobs:
             console.log('✅ Express app loaded and all middleware handlers are valid functions.');
           "
 
-      - name: Validate vercel.json files
+      - name: Validate vercel.json configuration
         run: |
           node -e "
             const fs = require('fs');
-            const be = JSON.parse(fs.readFileSync('./backend/vercel.json','utf8'));
-            const fe = JSON.parse(fs.readFileSync('./frontend/vercel.json','utf8'));
-            if (!be.rewrites || !be.builds) { console.error('❌ backend/vercel.json missing builds or rewrites'); process.exit(1); }
-            if (!fe.rewrites) { console.error('❌ frontend/vercel.json missing rewrites'); process.exit(1); }
-            console.log('✅ Both vercel.json files are valid.');
+            const vConfig = JSON.parse(fs.readFileSync('./vercel.json','utf8'));
+            if (!vConfig.rewrites || !Array.isArray(vConfig.rewrites)) {
+              console.error('❌ vercel.json missing rewrites configuration');
+              process.exit(1);
+            }
+            console.log('✅ Root vercel.json configuration is valid.');
           "
