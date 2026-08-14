@@ -37,11 +37,13 @@ jobs:
         working-directory: backend
 
       - name: Verify Express app exports a valid handler function
-        working-directory: ${{ github.workspace }}
+        env:
+          WORKSPACE: ${{ github.workspace }}
         run: |
           node -e "
+            const path = require('path');
             process.env.MONGODB_URI = '';
-            const app = require('./backend/api/index.js');
+            const app = require(path.join(process.env.WORKSPACE, 'backend/api/index.js'));
             if (typeof app !== 'function') {
               console.error('\u274c backend/api/index.js must export a function (Express app)');
               process.exit(1);
@@ -58,18 +60,19 @@ jobs:
             console.log('\u2705 Express app loaded and all middleware handlers are valid functions.');
           "
 
+
       - name: Validate vercel.json configuration
-        working-directory: ${{ github.workspace }}
+        env:
+          WORKSPACE: ${{ github.workspace }}
         run: |
-          cat vercel.json | node -e "
-            let raw = '';
-            process.stdin.on('data', d => raw += d);
-            process.stdin.on('end', () => {
-              const vConfig = JSON.parse(raw);
-              if (!vConfig.rewrites || !Array.isArray(vConfig.rewrites)) {
-                console.error('\u274c vercel.json missing rewrites configuration');
-                process.exit(1);
-              }
-              console.log('\u2705 Root vercel.json configuration is valid.');
-            });
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+            const file = path.join(process.env.WORKSPACE, 'vercel.json');
+            const vConfig = JSON.parse(fs.readFileSync(file, 'utf8'));
+            if (!vConfig.rewrites || !Array.isArray(vConfig.rewrites)) {
+              console.error('\u274c vercel.json missing rewrites configuration');
+              process.exit(1);
+            }
+            console.log('\u2705 Root vercel.json configuration is valid.');
           "
