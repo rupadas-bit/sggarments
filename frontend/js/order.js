@@ -363,7 +363,7 @@ async function handleOrderSubmit(e) {
   };
 
   try {
-    const res = await fetch('/api/v1/orders', {
+    const res = await fetch(`${window.API_BASE_URL || ''}/api/v1/orders`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

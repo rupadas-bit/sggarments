@@ -18,7 +18,7 @@ if (document.readyState === 'loading') {
 
 async function loadProducts() {
   try {
-    const res = await fetch('/api/v1/products');
+    const res = await fetch(`${window.API_BASE_URL || ''}/api/v1/products`);
     const contentType = res.headers.get('content-type') || '';
 
     if (!res.ok || !contentType.includes('application/json')) {

@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let productId = params.get('id') || '1';
   
   try {
-    const res = await fetch(`/api/v1/products/${productId}`);
+    const res = await fetch(`${window.API_BASE_URL || ''}/api/v1/products/${productId}`);
     if (res.ok) {
       const result = await res.json();
       if (result.success && result.data) {

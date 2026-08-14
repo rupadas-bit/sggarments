@@ -35,7 +35,7 @@ async function checkAdminAuth() {
   }
 
   try {
-    const res = await fetch('/api/v1/auth/verify', {
+    const res = await fetch(`${window.API_BASE_URL || ''}/api/v1/auth/verify`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     
@@ -81,7 +81,7 @@ function setupAdminAuth() {
       if (errorMsgBox) errorMsgBox.classList.add('hidden');
 
       try {
-        const res = await fetch('/api/v1/auth/login', {
+        const res = await fetch(`${window.API_BASE_URL || ''}/api/v1/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password })
@@ -142,9 +142,9 @@ async function loadAdminData() {
     const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
     const [prodRes, orderRes, enqRes] = await Promise.all([
-      fetch('/api/v1/products', { headers }),
-      fetch('/api/v1/orders', { headers }).catch(() => null),
-      fetch('/api/v1/enquiries', { headers }).catch(() => null)
+      fetch(`${window.API_BASE_URL || ''}/api/v1/products`, { headers }),
+      fetch(`${window.API_BASE_URL || ''}/api/v1/orders`, { headers }).catch(() => null),
+      fetch(`${window.API_BASE_URL || ''}/api/v1/enquiries`, { headers }).catch(() => null)
     ]);
 
     if (prodRes && prodRes.ok) {
@@ -581,11 +581,11 @@ async function handleFormSubmit() {
   submitBtn.innerText = '⌛ Saving Product...';
 
   try {
-    let url = '/api/v1/products';
+    let url = `${window.API_BASE_URL || ''}/api/v1/products`;
     let method = 'POST';
 
     if (editId) {
-      url = `/api/v1/products/${editId}`;
+      url = `${window.API_BASE_URL || ''}/api/v1/products/${editId}`;
       method = 'PUT';
     }
 
@@ -815,7 +815,7 @@ function setupStoreSettings() {
     }
 
     try {
-      const res = await fetch('/api/v1/config', {
+      const res = await fetch(`${window.API_BASE_URL || ''}/api/v1/config`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -846,7 +846,7 @@ function setupStoreSettings() {
 
 async function loadStoreSettings() {
   try {
-    const res = await fetch('/api/v1/config');
+    const res = await fetch(`${window.API_BASE_URL || ''}/api/v1/config`);
     if (!res.ok) return;
     const result = await res.json();
     const cfg = result.data || {};
@@ -892,7 +892,7 @@ async function uploadImageToCloudinary(file, folder) {
   });
 
   const token = sessionStorage.getItem('sg_admin_token');
-  const res = await fetch('/api/v1/upload', {
+  const res = await fetch(`${window.API_BASE_URL || ''}/api/v1/upload`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -1142,7 +1142,7 @@ window.deleteProduct = async function(id) {
 
   try {
     const token = sessionStorage.getItem('sg_admin_token');
-    const res = await fetch(`/api/v1/products/${id}`, { 
+    const res = await fetch(`${window.API_BASE_URL || ''}/api/v1/products/${id}`, { 
       method: 'DELETE',
       headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     });

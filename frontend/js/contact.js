@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const submitBtn = contactForm.querySelector('button[type="submit"]');
       if (submitBtn) submitBtn.disabled = true;
 
-      fetch('/api/v1/enquiries', {
+      fetch(`${window.API_BASE_URL || ''}/api/v1/enquiries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, phone, email, message })

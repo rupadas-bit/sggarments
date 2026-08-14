@@ -11,7 +11,7 @@ window.STORE_CONFIG = window.STORE_CONFIG || {
 
 async function fetchStoreConfig() {
   try {
-    const res = await fetch('/api/v1/config');
+    const res = await fetch(`${window.API_BASE_URL || ''}/api/v1/config`);
     if (res.ok) {
       const result = await res.json();
       const configData = result.data || result;
