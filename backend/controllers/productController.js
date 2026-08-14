@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const Product = require('../models/Product');
-const { isDbConnected } = require('../db');
+const { isDbConnected, ensureDb } = require('../db');
 
 const dataFilePath = path.join(__dirname, '../data/products.json');
 // On Vercel (or any read-only FS), fall back to /tmp for JSON writes
@@ -17,6 +17,7 @@ function stripMongo(doc) {
 }
 
 async function readProducts() {
+  await ensureDb();
   if (isDbConnected()) {
     try {
       const docs = await Product.find({}).sort({ id: 1 }).lean();
@@ -27,7 +28,9 @@ async function readProducts() {
   }
 
   try {
-    const raw = fs.readFileSync(dataFilePath, 'utf8');
+    const raw = fs.existsSync(writableDataFilePath)
+      ? fs.readFileSync(writableDataFilePath, 'utf8')
+      : fs.readFileSync(dataFilePath, 'utf8');
     return JSON.parse(raw);
   } catch (err) {
     console.error('Error reading products data file:', err);
@@ -36,6 +39,7 @@ async function readProducts() {
 }
 
 async function saveProducts(products) {
+  await ensureDb();
   if (isDbConnected()) {
     // MongoDB is primary — do NOT fall through to JSON on failure
     const ops = products.map(p => ({
@@ -60,6 +64,7 @@ async function saveProducts(products) {
 }
 
 async function deleteProductById(id) {
+  await ensureDb();
   if (isDbConnected()) {
     const result = await Product.deleteOne({ id }); // throws on error
     return result.deletedCount > 0;
@@ -83,162 +88,177 @@ async function deleteProductById(id) {
 
 // GET /api/v1/products
 exports.getAllProducts = async (req, res) => {
-  let products = await readProducts();
-  const { category, q, sort } = req.query;
+  try {
+    let products = await readProducts();
+    const { category, q, sort } = req.query;
 
-  if (category && category !== 'All Collections') {
-    products = products.filter(p => p.category === category);
+    if (category && category !== 'All Collections') {
+      products = products.filter(p => p.category === category);
+    }
+
+    if (q) {
+      const term = q.toLowerCase().trim();
+      products = products.filter(p =>
+        (p.name && p.name.toLowerCase().includes(term)) ||
+        (p.shortDescription && p.shortDescription.toLowerCase().includes(term)) ||
+        (p.category && p.category.toLowerCase().includes(term))
+      );
+    }
+
+    if (sort === 'low-high') {
+      products.sort((a, b) => a.price - b.price);
+    } else if (sort === 'high-low') {
+      products.sort((a, b) => b.price - a.price);
+    } else if (sort === 'rating') {
+      products.sort((a, b) => b.rating - a.rating);
+    }
+
+    res.json({
+      success: true,
+      count: products.length,
+      data: products
+    });
+  } catch (err) {
+    console.error('getAllProducts error:', err);
+    res.status(500).json({ success: false, error: err.message || 'Server error' });
   }
-
-  if (q) {
-    const term = q.toLowerCase().trim();
-    products = products.filter(p =>
-      (p.name && p.name.toLowerCase().includes(term)) ||
-      (p.shortDescription && p.shortDescription.toLowerCase().includes(term)) ||
-      (p.category && p.category.toLowerCase().includes(term))
-    );
-  }
-
-  if (sort === 'low-high') {
-    products.sort((a, b) => a.price - b.price);
-  } else if (sort === 'high-low') {
-    products.sort((a, b) => b.price - a.price);
-  } else if (sort === 'rating') {
-    products.sort((a, b) => b.rating - a.rating);
-  }
-
-  res.json({
-    success: true,
-    count: products.length,
-    data: products
-  });
 };
 
 // GET /api/v1/products/:id
 exports.getProductById = async (req, res) => {
-  const products = await readProducts();
-  const id = parseInt(req.params.id, 10);
-  const product = products.find(p => p.id === id);
+  try {
+    const products = await readProducts();
+    const id = parseInt(req.params.id, 10);
+    const product = products.find(p => p.id === id);
 
-  if (!product) {
-    return res.status(404).json({
-      success: false,
-      error: 'Product not found'
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        error: 'Product not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: product
     });
+  } catch (err) {
+    console.error('getProductById error:', err);
+    res.status(500).json({ success: false, error: err.message || 'Server error' });
   }
-
-  res.json({
-    success: true,
-    data: product
-  });
 };
 
 // POST /api/v1/products
 exports.createProduct = async (req, res) => {
-  const products = await readProducts();
-  const {
-    name,
-    price,
-    originalPrice,
-    discount,
-    category,
-    images,
-    shortDescription,
-    fullDescription,
-    features,
-    specs,
-    variants,
-    availability,
-    rating,
-    reviewsCount
-  } = req.body;
+  try {
+    const products = await readProducts();
+    const {
+      name,
+      price,
+      originalPrice,
+      discount,
+      category,
+      images,
+      shortDescription,
+      fullDescription,
+      features,
+      specs,
+      variants,
+      availability,
+      rating,
+      reviewsCount
+    } = req.body;
 
-  if (!name || !price || !category) {
-    return res.status(400).json({
-      success: false,
-      error: 'Product Name, Price, and Category are required.'
+    if (!name || !price || !category) {
+      return res.status(400).json({
+        success: false,
+        error: 'Product Name, Price, and Category are required.'
+      });
+    }
+
+    const numPrice = parseFloat(price) || 0;
+    const numOrigPrice = parseFloat(originalPrice) || numPrice;
+
+    let calculatedDiscount = discount ? discount.trim() : '';
+    if ((!calculatedDiscount || calculatedDiscount.endsWith('% OFF') || calculatedDiscount.endsWith('% off')) && numOrigPrice > numPrice && numOrigPrice > 0) {
+      const pct = Math.round(((numOrigPrice - numPrice) / numOrigPrice) * 100);
+      calculatedDiscount = `${pct}% OFF`;
+    } else if (!calculatedDiscount && numOrigPrice > numPrice) {
+      const pct = Math.round(((numOrigPrice - numPrice) / numOrigPrice) * 100);
+      calculatedDiscount = `${pct}% OFF`;
+    } else if (!calculatedDiscount) {
+      calculatedDiscount = 'Special Price';
+    }
+
+    // Parse images array
+    let imgList = [];
+    if (Array.isArray(images)) {
+      imgList = images.filter(i => typeof i === 'string' && i.trim().length > 0);
+    } else if (typeof images === 'string') {
+      imgList = images.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    if (imgList.length === 0) {
+      imgList = ['https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80'];
+    }
+
+    // Parse features
+    let featureList = [];
+    if (Array.isArray(features)) {
+      featureList = features;
+    } else if (typeof features === 'string') {
+      featureList = features.split('\n').map(f => f.trim()).filter(Boolean);
+    }
+
+    const maxId = products.reduce((max, p) => (p.id > max ? p.id : max), 0);
+    const newProduct = {
+      id: maxId + 1,
+      name: name.trim(),
+      price: numPrice,
+      originalPrice: numOrigPrice,
+      discount: calculatedDiscount,
+      category: category.trim(),
+      images: imgList,
+      shortDescription: (shortDescription || name).trim(),
+      fullDescription: (fullDescription || shortDescription || name).trim(),
+      features: featureList.length > 0 ? featureList : [
+        'Premium Fabric & Superior Stitching',
+        'Comfortable Regular Fit',
+        'Designed for Formal and Festive Occasions'
+      ],
+      specs: specs && typeof specs === 'object' ? specs : {
+        "Brand": "SG Garments",
+        "Fabric": "Premium Cotton & Silk Blend",
+        "Fit": "Regular Fit",
+        "Wash Care": "Dry Clean / Soft Hand Wash"
+      },
+      variants: variants && typeof variants === 'object' ? variants : {
+        "colors": ["Standard Color"],
+        "sizes": ["S", "M", "L", "XL", "XXL"]
+      },
+      availability: availability || 'In Stock (Fast Shipping)',
+      rating: parseFloat(rating) || 4.8,
+      reviewsCount: parseInt(reviewsCount, 10) || 12
+    };
+
+    products.unshift(newProduct);
+    const saved = await saveProducts(products);
+
+    if (!saved) {
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to save product.'
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Product created successfully',
+      data: newProduct
     });
+  } catch (err) {
+    console.error('createProduct error:', err);
+    res.status(500).json({ success: false, error: err.message || 'Internal server error' });
   }
-
-  const numPrice = parseFloat(price) || 0;
-  const numOrigPrice = parseFloat(originalPrice) || numPrice;
-
-  let calculatedDiscount = discount ? discount.trim() : '';
-  if ((!calculatedDiscount || calculatedDiscount.endsWith('% OFF') || calculatedDiscount.endsWith('% off')) && numOrigPrice > numPrice && numOrigPrice > 0) {
-    const pct = Math.round(((numOrigPrice - numPrice) / numOrigPrice) * 100);
-    calculatedDiscount = `${pct}% OFF`;
-  } else if (!calculatedDiscount && numOrigPrice > numPrice) {
-    const pct = Math.round(((numOrigPrice - numPrice) / numOrigPrice) * 100);
-    calculatedDiscount = `${pct}% OFF`;
-  } else if (!calculatedDiscount) {
-    calculatedDiscount = 'Special Price';
-  }
-
-  // Parse images array
-  let imgList = [];
-  if (Array.isArray(images)) {
-    imgList = images.filter(i => typeof i === 'string' && i.trim().length > 0);
-  } else if (typeof images === 'string') {
-    imgList = images.split(',').map(s => s.trim()).filter(Boolean);
-  }
-  if (imgList.length === 0) {
-    imgList = ['https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80'];
-  }
-
-  // Parse features
-  let featureList = [];
-  if (Array.isArray(features)) {
-    featureList = features;
-  } else if (typeof features === 'string') {
-    featureList = features.split('\n').map(f => f.trim()).filter(Boolean);
-  }
-
-  const maxId = products.reduce((max, p) => (p.id > max ? p.id : max), 0);
-  const newProduct = {
-    id: maxId + 1,
-    name: name.trim(),
-    price: numPrice,
-    originalPrice: numOrigPrice,
-    discount: calculatedDiscount,
-    category: category.trim(),
-    images: imgList,
-    shortDescription: (shortDescription || name).trim(),
-    fullDescription: (fullDescription || shortDescription || name).trim(),
-    features: featureList.length > 0 ? featureList : [
-      'Premium Fabric & Superior Stitching',
-      'Comfortable Regular Fit',
-      'Designed for Formal and Festive Occasions'
-    ],
-    specs: specs && typeof specs === 'object' ? specs : {
-      "Brand": "SG Garments",
-      "Fabric": "Premium Cotton & Silk Blend",
-      "Fit": "Regular Fit",
-      "Wash Care": "Dry Clean / Soft Hand Wash"
-    },
-    variants: variants && typeof variants === 'object' ? variants : {
-      "colors": ["Standard Color"],
-      "sizes": ["S", "M", "L", "XL", "XXL"]
-    },
-    availability: availability || 'In Stock (Fast Shipping)',
-    rating: parseFloat(rating) || 4.8,
-    reviewsCount: parseInt(reviewsCount, 10) || 12
-  };
-
-  products.unshift(newProduct);
-  const saved = await saveProducts(products);
-
-  if (!saved) {
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to write product to file.'
-    });
-  }
-
-  res.status(201).json({
-    success: true,
-    message: 'Product created successfully',
-    data: newProduct
-  });
 };
 
 // PUT /api/v1/products/:id
@@ -307,30 +327,35 @@ exports.updateProduct = async (req, res) => {
 
 // DELETE /api/v1/products/:id
 exports.deleteProduct = async (req, res) => {
-  const products = await readProducts();
-  const id = parseInt(req.params.id, 10);
-  const index = products.findIndex(p => p.id === id);
+  try {
+    const products = await readProducts();
+    const id = parseInt(req.params.id, 10);
+    const index = products.findIndex(p => p.id === id);
 
-  if (index === -1) {
-    return res.status(404).json({
-      success: false,
-      error: 'Product not found'
+    if (index === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'Product not found'
+      });
+    }
+
+    const deleted = products[index];
+    const removed = await deleteProductById(id);
+
+    if (!removed) {
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to delete product.'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Product deleted successfully',
+      data: deleted
     });
+  } catch (err) {
+    console.error('deleteProduct error:', err);
+    res.status(500).json({ success: false, error: err.message || 'Internal server error' });
   }
-
-  const deleted = products[index];
-  const removed = await deleteProductById(id);
-
-  if (!removed) {
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to delete product.'
-    });
-  }
-
-  res.json({
-    success: true,
-    message: 'Product deleted successfully',
-    data: deleted
-  });
 };

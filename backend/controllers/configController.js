@@ -6,9 +6,12 @@
 const fs = require('fs');
 const path = require('path');
 const StoreConfig = require('../models/StoreConfig');
-const { isDbConnected } = require('../db');
+const { isDbConnected, ensureDb } = require('../db');
 
 const configFilePath = path.join(__dirname, '../data/config.json');
+const writableConfigFilePath = process.env.VERCEL
+  ? '/tmp/config.json'
+  : configFilePath;
 
 const envDefaults = {
   storeName: process.env.STORE_NAME || 'SG Fashion',
@@ -22,6 +25,7 @@ const envDefaults = {
 };
 
 async function readStoredConfig() {
+  await ensureDb();
   if (isDbConnected()) {
     try {
       const doc = await StoreConfig.findOne({ key: 'main' }).lean();
@@ -36,8 +40,9 @@ async function readStoredConfig() {
   }
 
   try {
-    if (!fs.existsSync(configFilePath)) return {};
-    return JSON.parse(fs.readFileSync(configFilePath, 'utf8'));
+    const targetFile = fs.existsSync(writableConfigFilePath) ? writableConfigFilePath : configFilePath;
+    if (!fs.existsSync(targetFile)) return {};
+    return JSON.parse(fs.readFileSync(targetFile, 'utf8'));
   } catch (err) {
     console.error('Error reading config data:', err);
     return {};
@@ -45,17 +50,14 @@ async function readStoredConfig() {
 }
 
 async function saveStoredConfig(config) {
+  await ensureDb();
   if (isDbConnected()) {
-    try {
-      await StoreConfig.findOneAndUpdate({ key: 'main' }, { $set: config }, { upsert: true });
-      return true;
-    } catch (err) {
-      console.error('Error saving config to MongoDB:', err);
-    }
+    await StoreConfig.findOneAndUpdate({ key: 'main' }, { $set: config }, { upsert: true });
+    return true;
   }
 
   try {
-    fs.writeFileSync(configFilePath, JSON.stringify(config, null, 2), 'utf8');
+    fs.writeFileSync(writableConfigFilePath, JSON.stringify(config, null, 2), 'utf8');
     return true;
   } catch (err) {
     console.error('Error saving config data:', err);
@@ -70,48 +72,58 @@ async function getStoreConfig() {
 
 // GET /api/v1/config (public)
 exports.getConfig = async (req, res) => {
-  res.json({
-    success: true,
-    data: await getStoreConfig()
-  });
+  try {
+    res.json({
+      success: true,
+      data: await getStoreConfig()
+    });
+  } catch (err) {
+    console.error('getConfig error:', err);
+    res.status(500).json({ success: false, error: err.message || 'Server error' });
+  }
 };
 
 // PUT /api/v1/config (admin only)
 exports.updateConfig = async (req, res) => {
-  const stored = await readStoredConfig();
-  const allowed = ['storeName', 'whatsappNumber', 'phone', 'email', 'address', 'hours', 'logo', 'heroImage'];
-  const updated = { ...stored };
+  try {
+    const stored = await readStoredConfig();
+    const allowed = ['storeName', 'whatsappNumber', 'phone', 'email', 'address', 'hours', 'logo', 'heroImage'];
+    const updated = { ...stored };
 
-  allowed.forEach(key => {
-    if (req.body[key] !== undefined) {
-      updated[key] = typeof req.body[key] === 'string' ? req.body[key].trim() : req.body[key];
+    allowed.forEach(key => {
+      if (req.body[key] !== undefined) {
+        updated[key] = typeof req.body[key] === 'string' ? req.body[key].trim() : req.body[key];
+      }
+    });
+
+    if (updated.whatsappNumber) {
+      const clean = updated.whatsappNumber.replace(/\D/g, '');
+      if (clean.length < 10) {
+        return res.status(400).json({
+          success: false,
+          error: 'WhatsApp number must contain at least 10 digits.'
+        });
+      }
+      updated.whatsappNumber = clean;
     }
-  });
 
-  if (updated.whatsappNumber) {
-    const clean = updated.whatsappNumber.replace(/\D/g, '');
-    if (clean.length < 10) {
-      return res.status(400).json({
+    const saved = await saveStoredConfig(updated);
+    if (!saved) {
+      return res.status(500).json({
         success: false,
-        error: 'WhatsApp number must contain at least 10 digits.'
+        error: 'Failed to save store settings.'
       });
     }
-    updated.whatsappNumber = clean;
-  }
 
-  const saved = await saveStoredConfig(updated);
-  if (!saved) {
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to save store settings.'
+    res.json({
+      success: true,
+      message: 'Store settings updated successfully.',
+      data: updated
     });
+  } catch (err) {
+    console.error('updateConfig error:', err);
+    res.status(500).json({ success: false, error: err.message || 'Internal server error' });
   }
-
-  res.json({
-    success: true,
-    message: 'Store settings updated successfully.',
-    data: updated
-  });
 };
 
 exports.getStoreConfig = getStoreConfig;

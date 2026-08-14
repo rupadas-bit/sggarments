@@ -14,6 +14,10 @@ async function connectDB() {
     return false;
   }
 
+  if (isConnected && mongoose.connection.readyState === 1) {
+    return true;
+  }
+
   try {
     await mongoose.connect(MONGODB_URI, {
       serverSelectionTimeoutMS: 8000,
@@ -23,14 +27,21 @@ async function connectDB() {
     console.log('Connected to MongoDB');
     return true;
   } catch (err) {
-    console.error('MongoDB connection failed, falling back to JSON files:', err.message);
+    console.error('MongoDB connection failed:', err.message);
     isConnected = false;
     return false;
   }
 }
 
-function isDbConnected() {
-  return isConnected;
+async function ensureDb() {
+  if (process.env.MONGODB_URI && mongoose.connection.readyState !== 1) {
+    await connectDB();
+  }
+  return isDbConnected();
 }
 
-module.exports = { connectDB, isDbConnected };
+function isDbConnected() {
+  return isConnected || (mongoose.connection && mongoose.connection.readyState === 1);
+}
+
+module.exports = { connectDB, ensureDb, isDbConnected };
