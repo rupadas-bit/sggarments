@@ -1,52 +1,98 @@
 // Vercel serverless entry point — SG Fashion Backend API
+// Vercel imports this exported Express app; app.listen() is NOT called here.
 
 require('dotenv').config();
 
 const express = require('express');
-const cors = require('cors');
 const { connectDB } = require('../db');
 
-connectDB().catch(() => {});
+// Trigger background DB connection attempt without blocking app export
+connectDB().catch(err => console.error('Initial MongoDB connection error:', err));
 
 const app = express();
 app.disable('x-powered-by');
 
-// CORS
-app.use(cors({
-  origin: (origin, callback) => callback(null, true),
-  credentials: true,
-}));
+/* ------------------------------------------------------------------
+   UNIVERSAL FAIL-SAFE CORS MIDDLEWARE
+   Reflects requesting origin, supports credentials, and responds
+   to preflight OPTIONS requests with 200 OK across all environments.
+   ------------------------------------------------------------------ */
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Authorization, Origin');
+
+  // Fast response for CORS preflight OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
 
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
-// Health check
-app.get('/', (_req, res) => {
-  res.json({ success: true, message: 'SG Garments API is running.' });
+// Root health-check endpoint (prevents 500/404 on direct backend URL access)
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'SG Garments Backend API is online and operational.',
+    environment: process.env.VERCEL ? 'Vercel Serverless' : 'Local Node Environment',
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Mount all API routes under a single fresh Router — no double-mounting
-const apiRouter = express.Router();
+// Import route handlers
+const productsRouter = require('../routes/products');
+const ordersRouter = require('../routes/orders');
+const enquiriesRouter = require('../routes/enquiries');
+const configRouter = require('../routes/config');
+const authRouter = require('../routes/auth');
+const uploadRouter = require('../routes/upload');
 
-apiRouter.use('/products',  require('../routes/products'));
-apiRouter.use('/orders',    require('../routes/orders'));
-apiRouter.use('/enquiries', require('../routes/enquiries'));
-apiRouter.use('/config',    require('../routes/config'));
-apiRouter.use('/auth',      require('../routes/auth'));
-apiRouter.use('/upload',    require('../routes/upload'));
+// Construct single API v1 Router instance
+const apiV1Router = express.Router();
+apiV1Router.use('/products', productsRouter);
+apiV1Router.use('/orders', ordersRouter);
+apiV1Router.use('/enquiries', enquiriesRouter);
+apiV1Router.use('/config', configRouter);
+apiV1Router.use('/auth', authRouter);
+apiV1Router.use('/upload', uploadRouter);
 
-// Single mount — /api/v1 only, no legacy alias (eliminates double-mount & recursive app.handle)
-app.use('/api/v1', apiRouter);
+// Primary API Router Mount
+app.use('/api/v1', apiV1Router);
 
-// 404 catch-all
-app.use((_req, res) => {
-  res.status(404).json({ success: false, error: 'Route not found.' });
+// Legacy /api alias forwarder
+app.use('/api', (req, res, next) => {
+  if (req.url.startsWith('/v1')) {
+    return next();
+  }
+  req.url = '/api/v1' + (req.url.startsWith('/') ? req.url : '/' + req.url);
+  return app.handle(req, res, next);
 });
 
-// Global error handler (4-arg required for Express to recognise it as error middleware)
-app.use((err, _req, res, _next) => {
-  console.error('Server error:', err);
-  res.status(err.status || 500).json({ success: false, error: err.message || 'Internal server error.' });
+// 404 Catch-All Middleware for unmatched routes (includes CORS headers)
+app.use((req, res) => {
+  res.status(404).json({ success: false, error: `API route '${req.originalUrl}' not found.` });
 });
 
+// Global Express Error Handler
+app.use((err, req, res, next) => {
+  console.error('Express Serverless Execution Error:', err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(err.status || 500).json({
+    success: false,
+    error: err.message || 'An unexpected internal server error occurred.'
+  });
+});
+
+// Export Express app for Vercel Serverless execution
 module.exports = app;
