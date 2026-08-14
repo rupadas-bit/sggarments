@@ -15,7 +15,7 @@ const app = express();
 /* ------------------------------------------------------------------
    CORS — allow the deployed frontend + localhost for local dev.
    Set FRONTEND_URL in your Vercel backend environment variables,
-   e.g.  FRONTEND_URL=https://sg-fashion.vercel.app
+   e.g. FRONTEND_URL=https://sggarments-fcb4.vercel.app
    ------------------------------------------------------------------ */
 const allowedOrigins = [
   process.env.FRONTEND_URL,           // production frontend
@@ -29,10 +29,10 @@ app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (server-to-server, curl, Postman, etc.)
     if (!origin) return callback(null, true);
-    // Allow any *.vercel.app preview URL (handy for PR previews)
+    // Allow any *.vercel.app preview or production URL
     if (origin.endsWith('.vercel.app')) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error(`CORS: origin '${origin}' not allowed`));
+    callback(null, false);
   },
   credentials: true,
 }));
