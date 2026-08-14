@@ -1,7 +1,17 @@
 // Vercel serverless entry point — SG Fashion Backend API
 // Vercel imports this exported Express app; app.listen() is NOT called here.
 
-require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+const dotenv = require('dotenv');
+
+if (fs.existsSync(path.join(__dirname, '..', '.env'))) {
+  dotenv.config({ path: path.join(__dirname, '..', '.env') });
+} else if (fs.existsSync(path.join(__dirname, '..', '..', '.env'))) {
+  dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
+} else {
+  dotenv.config();
+}
 
 const express = require('express');
 const { connectDB } = require('../db');

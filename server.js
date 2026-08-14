@@ -13,10 +13,18 @@
  * to the same Express backend — replicating what the two Vercel deployments do.
  */
 
-require('dotenv').config();
-const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const dotenv = require('dotenv');
+
+if (fs.existsSync(path.join(__dirname, '.env'))) {
+  dotenv.config({ path: path.join(__dirname, '.env') });
+} else if (fs.existsSync(path.join(__dirname, 'backend', '.env'))) {
+  dotenv.config({ path: path.join(__dirname, 'backend', '.env') });
+} else {
+  dotenv.config();
+}
+const express = require('express');
 const { connectDB } = require('./backend/db');
 
 const app = express();
