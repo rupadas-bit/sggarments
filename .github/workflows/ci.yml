@@ -37,6 +37,7 @@ jobs:
         working-directory: backend
 
       - name: Verify Express app exports a valid handler function
+        working-directory: .
         run: |
           node -e "
             process.env.MONGODB_URI = '';
@@ -45,7 +46,6 @@ jobs:
               console.error('❌ backend/api/index.js must export a function (Express app)');
               process.exit(1);
             }
-            // Ensure no undefined middleware was registered
             const stack = app._router && app._router.stack;
             if (stack) {
               stack.forEach((layer, i) => {
@@ -59,6 +59,7 @@ jobs:
           "
 
       - name: Validate vercel.json configuration
+        working-directory: .
         run: |
           node -e "
             const fs = require('fs');
