@@ -1,4 +1,4 @@
-name: SG Garments CI & Automated Error Tracking
+name: SG Garments CI – Backend Verification
 
 on:
   push:
@@ -8,55 +8,63 @@ on:
 
 jobs:
   validate:
-    name: Code Inspection & Serverless Entry Point Test
+    name: Syntax & Express App Integrity
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout Repository Code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🟢 Setup Node.js (v18)
+      - name: Setup Node.js 18
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      - name: 📦 Install Backend Dependencies
-        run: |
-          cd backend
-          npm install
+      - name: Install backend dependencies
+        run: npm install
+        working-directory: backend
 
-      - name: 🔍 Inspect Backend Syntax & Route Logic
+      - name: Check syntax – all backend JS files
         run: |
-          node -c backend/api/index.js
-          node -c backend/server.js
-          node -c backend/db.js
-          node -c backend/cloudinary.js
-          node -c backend/controllers/*.js
-          node -c backend/routes/*.js
-          node -c backend/models/*.js
-          echo "✅ All backend Node.js files passed syntax inspection."
+          node -c api/index.js
+          node -c server.js
+          node -c db.js
+          node -c cloudinary.js
+          node -c controllers/*.js
+          node -c routes/*.js
+          node -c models/*.js
+          echo "✅ All backend files passed syntax check."
+        working-directory: backend
 
-      - name: ⚡ Test Express Entry Point & Error Handling
+      - name: Verify Express app exports a valid handler function
         run: |
           node -e "
-            process.env.VERCEL = '1';
+            process.env.MONGODB_URI = '';
             const app = require('./backend/api/index.js');
             if (typeof app !== 'function') {
-              console.error('❌ Error: backend/api/index.js must export an Express application function!');
+              console.error('❌ backend/api/index.js must export a function (Express app)');
               process.exit(1);
             }
-            console.log('✅ Express Vercel Serverless Entry Point successfully initialized!');
+            // Ensure no undefined middleware was registered
+            const stack = app._router && app._router.stack;
+            if (stack) {
+              stack.forEach((layer, i) => {
+                if (!layer.handle || typeof layer.handle !== 'function') {
+                  console.error('❌ Undefined middleware at stack index', i, layer);
+                  process.exit(1);
+                }
+              });
+            }
+            console.log('✅ Express app loaded and all middleware handlers are valid functions.');
           "
 
-      - name: 🌐 Inspect Frontend & Vercel Configuration
+      - name: Validate vercel.json files
         run: |
           node -e "
             const fs = require('fs');
-            const feConfig = JSON.parse(fs.readFileSync('./frontend/vercel.json', 'utf8'));
-            const beConfig = JSON.parse(fs.readFileSync('./backend/vercel.json', 'utf8'));
-            if (!feConfig.rewrites || !beConfig.rewrites) {
-              console.error('❌ Error: vercel.json configurations must contain valid rewrites!');
-              process.exit(1);
-            }
-            console.log('✅ Vercel rewrites rules verified.');
+            const be = JSON.parse(fs.readFileSync('./backend/vercel.json','utf8'));
+            const fe = JSON.parse(fs.readFileSync('./frontend/vercel.json','utf8'));
+            if (!be.rewrites || !be.builds) { console.error('❌ backend/vercel.json missing builds or rewrites'); process.exit(1); }
+            if (!fe.rewrites) { console.error('❌ frontend/vercel.json missing rewrites'); process.exit(1); }
+            console.log('✅ Both vercel.json files are valid.');
           "
