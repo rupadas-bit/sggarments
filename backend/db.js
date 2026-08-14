@@ -1,40 +1,54 @@
 // MongoDB connection manager.
 // If MONGODB_URI is set and reachable the app uses MongoDB, otherwise it
-// falls back to the JSON files under backend/data/.
+// falls back to JSON file storage.
 
 const mongoose = require('mongoose');
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
 let isConnected = false;
+let lastFailTime = 0;
+const FAIL_RETRY_INTERVAL_MS = 30000; // Retry connection after 30s on failure
 
 async function connectDB() {
+  const MONGODB_URI = process.env.MONGODB_URI;
+
   if (!MONGODB_URI) {
-    console.warn('MONGODB_URI not set. Running in JSON file storage mode.');
+    if (!process.env.SUPPRESS_MONGO_WARN) {
+      console.warn('MONGODB_URI is not set. Running in JSON fallback storage mode.');
+      process.env.SUPPRESS_MONGO_WARN = 'true';
+    }
+    isConnected = false;
     return false;
   }
 
-  if (isConnected && mongoose.connection.readyState === 1) {
+  // Reuse existing active connection
+  if (mongoose.connection && mongoose.connection.readyState === 1) {
+    isConnected = true;
     return true;
+  }
+
+  // Prevent repeated 8s timeouts if connection failed recently
+  if (!isConnected && Date.now() - lastFailTime < FAIL_RETRY_INTERVAL_MS) {
+    return false;
   }
 
   try {
     await mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 8000,
-      connectTimeoutMS: 10000
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000
     });
     isConnected = true;
-    console.log('Connected to MongoDB');
+    console.log('Connected successfully to MongoDB Atlas');
     return true;
   } catch (err) {
-    console.error('MongoDB connection failed:', err.message);
+    lastFailTime = Date.now();
     isConnected = false;
+    console.error('MongoDB connection failed (falling back to JSON mode):', err.message);
     return false;
   }
 }
 
 async function ensureDb() {
-  if (process.env.MONGODB_URI && mongoose.connection.readyState !== 1) {
+  if (process.env.MONGODB_URI && (!mongoose.connection || mongoose.connection.readyState !== 1)) {
     await connectDB();
   }
   return isDbConnected();

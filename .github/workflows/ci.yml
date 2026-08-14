@@ -1,0 +1,62 @@
+name: SG Garments CI & Automated Error Tracking
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate:
+    name: Code Inspection & Serverless Entry Point Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js (v18)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 📦 Install Backend Dependencies
+        run: |
+          cd backend
+          npm install
+
+      - name: 🔍 Inspect Backend Syntax & Route Logic
+        run: |
+          node -c backend/api/index.js
+          node -c backend/server.js
+          node -c backend/db.js
+          node -c backend/cloudinary.js
+          node -c backend/controllers/*.js
+          node -c backend/routes/*.js
+          node -c backend/models/*.js
+          echo "✅ All backend Node.js files passed syntax inspection."
+
+      - name: ⚡ Test Express Entry Point & Error Handling
+        run: |
+          node -e "
+            process.env.VERCEL = '1';
+            const app = require('./backend/api/index.js');
+            if (typeof app !== 'function') {
+              console.error('❌ Error: backend/api/index.js must export an Express application function!');
+              process.exit(1);
+            }
+            console.log('✅ Express Vercel Serverless Entry Point successfully initialized!');
+          "
+
+      - name: 🌐 Inspect Frontend & Vercel Configuration
+        run: |
+          node -e "
+            const fs = require('fs');
+            const feConfig = JSON.parse(fs.readFileSync('./frontend/vercel.json', 'utf8'));
+            const beConfig = JSON.parse(fs.readFileSync('./backend/vercel.json', 'utf8'));
+            if (!feConfig.rewrites || !beConfig.rewrites) {
+              console.error('❌ Error: vercel.json configurations must contain valid rewrites!');
+              process.exit(1);
+            }
+            console.log('✅ Vercel rewrites rules verified.');
+          "

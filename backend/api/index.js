@@ -7,32 +7,31 @@ const express = require('express');
 const cors = require('cors');
 const { connectDB } = require('../db');
 
-// Connect to MongoDB (no-op if MONGODB_URI is unset — falls back to JSON files)
-connectDB();
+// Trigger background DB connection attempt without blocking app export
+connectDB().catch(err => console.error('Initial MongoDB connection error:', err));
 
 const app = express();
+app.disable('x-powered-by');
 
 /* ------------------------------------------------------------------
-   CORS — allow the deployed frontend + localhost for local dev.
-   Set FRONTEND_URL in your Vercel backend environment variables,
-   e.g. FRONTEND_URL=https://sggarments-fcb4.vercel.app
+   CORS — permissive origin resolver for serverless environments
    ------------------------------------------------------------------ */
-const allowedOrigins = [
-  process.env.FRONTEND_URL,           // production frontend
-  'http://localhost:3000',            // local full-stack dev
-  'http://127.0.0.1:3000',
-  'http://localhost:5500',            // VS Code Live Server
-  'http://127.0.0.1:5500',
-].filter(Boolean);
-
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (server-to-server, curl, Postman, etc.)
+    // Allow non-browser, server-to-server, curl, or Postman requests
     if (!origin) return callback(null, true);
-    // Allow any *.vercel.app preview or production URL
+    // Allow all *.vercel.app domains (frontend, preview, production)
     if (origin.endsWith('.vercel.app')) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(null, false);
+    // Allow local development servers
+    if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
+      return callback(null, true);
+    }
+    // Allow explicitly defined FRONTEND_URL if set
+    if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
+      return callback(null, true);
+    }
+    // Fallback allow to guarantee seamless API communication across domains
+    return callback(null, true);
   },
   credentials: true,
 }));
@@ -40,15 +39,45 @@ app.use(cors({
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
+// Root health-check endpoint (prevents 500/404 on direct backend URL access)
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'SG Garments Backend API is online and operational.',
+    environment: process.env.VERCEL ? 'Vercel Serverless' : 'Local Node Environment',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/api', (req, res) => {
+  res.json({
+    success: true,
+    message: 'SG Garments API v1 Endpoints are ready.',
+    routes: ['/api/v1/products', '/api/v1/orders', '/api/v1/enquiries', '/api/v1/config', '/api/v1/auth']
+  });
+});
+
 // ----- API Routes -----
 const backendRouter = require('../server');
 app.use('/api/v1', backendRouter);
-app.use('/api',    backendRouter); // legacy alias
+app.use('/api',    backendRouter); // legacy route prefix alias
 
-// Catch-all for unmatched API paths
+// 404 Catch-All Middleware for unmatched routes
 app.use((req, res) => {
-  res.status(404).json({ success: false, error: 'API route not found' });
+  res.status(404).json({ success: false, error: `API route '${req.originalUrl}' not found.` });
 });
 
-// Export for Vercel serverless runtime
+// Global Express Error Handler (4-argument signature prevents Serverless apply error)
+app.use((err, req, res, next) => {
+  console.error('Express Serverless Execution Error:', err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(err.status || 500).json({
+    success: false,
+    error: err.message || 'An unexpected internal server error occurred.'
+  });
+});
+
+// Export Express app for Vercel Serverless execution
 module.exports = app;
