@@ -30,7 +30,6 @@ app.use(cors({
     if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
       return callback(null, true);
     }
-    // Fallback allow to guarantee seamless API communication across domains
     return callback(null, true);
   },
   credentials: true,
@@ -49,18 +48,34 @@ app.get('/', (req, res) => {
   });
 });
 
-app.get('/api', (req, res) => {
-  res.json({
-    success: true,
-    message: 'SG Garments API v1 Endpoints are ready.',
-    routes: ['/api/v1/products', '/api/v1/orders', '/api/v1/enquiries', '/api/v1/config', '/api/v1/auth']
-  });
-});
+// Import route handlers
+const productsRouter = require('../routes/products');
+const ordersRouter = require('../routes/orders');
+const enquiriesRouter = require('../routes/enquiries');
+const configRouter = require('../routes/config');
+const authRouter = require('../routes/auth');
+const uploadRouter = require('../routes/upload');
 
-// ----- API Routes -----
-const backendRouter = require('../server');
-app.use('/api/v1', backendRouter);
-app.use('/api',    backendRouter); // legacy route prefix alias
+// Construct single API v1 Router instance (prevents router double-mount mutation)
+const apiV1Router = express.Router();
+apiV1Router.use('/products', productsRouter);
+apiV1Router.use('/orders', ordersRouter);
+apiV1Router.use('/enquiries', enquiriesRouter);
+apiV1Router.use('/config', configRouter);
+apiV1Router.use('/auth', authRouter);
+apiV1Router.use('/upload', uploadRouter);
+
+// Primary API Router Mount
+app.use('/api/v1', apiV1Router);
+
+// Legacy /api alias redirect middleware (avoids mounting same router twice)
+app.use('/api', (req, res, next) => {
+  if (req.url.startsWith('/v1')) {
+    return next();
+  }
+  req.url = '/api/v1' + (req.url.startsWith('/') ? req.url : '/' + req.url);
+  return app.handle(req, res, next);
+});
 
 // 404 Catch-All Middleware for unmatched routes
 app.use((req, res) => {
