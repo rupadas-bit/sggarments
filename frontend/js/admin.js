@@ -806,7 +806,11 @@ function setupStoreSettings() {
       address: document.getElementById('set-address').value.trim(),
       hours: document.getElementById('set-hours').value.trim(),
       logo: document.getElementById('set-logo').value.trim(),
-      heroImage: document.getElementById('set-hero-image').value.trim()
+      heroImage: document.getElementById('set-hero-image').value.trim(),
+      promoHeading: document.getElementById('set-promo-heading') ? document.getElementById('set-promo-heading').value.trim() : '',
+      promoSubtext: document.getElementById('set-promo-subtext') ? document.getElementById('set-promo-subtext').value.trim() : '',
+      promoBtnText: document.getElementById('set-promo-btn-text') ? document.getElementById('set-promo-btn-text').value.trim() : '',
+      promoBtnLink: document.getElementById('set-promo-btn-link') ? document.getElementById('set-promo-btn-link').value.trim() : ''
     };
 
     if (submitBtn) {
@@ -864,6 +868,10 @@ async function loadStoreSettings() {
     set('set-hours', cfg.hours);
     set('set-logo', cfg.logo);
     set('set-hero-image', cfg.heroImage);
+    set('set-promo-heading', cfg.promoHeading);
+    set('set-promo-subtext', cfg.promoSubtext);
+    set('set-promo-btn-text', cfg.promoBtnText);
+    set('set-promo-btn-link', cfg.promoBtnLink);
 
     setHint('set-logo-url', cfg.logo, 'No logo uploaded yet.');
     setHint('set-hero-url', cfg.heroImage, 'No hero image uploaded yet.');

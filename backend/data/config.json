@@ -4,5 +4,11 @@
   "phone": "+91 98765 43210",
   "email": "support@sutorekha.com",
   "address": "Commercial Hub, M.G. Road, Kolkata, West Bengal — 700007",
-  "hours": "Mon – Sat: 10:00 AM – 8:30 PM | Sun: 11:00 AM – 6:00 PM"
+  "hours": "Mon – Sat: 10:00 AM – 8:30 PM | Sun: 11:00 AM – 6:00 PM",
+  "logo": "",
+  "heroImage": "",
+  "promoHeading": "Festive Special Sale — Up to 37% Off!",
+  "promoSubtext": "Enjoy premium ready-to-wear retail garments and doorstep express delivery across India.",
+  "promoBtnText": "View Festive Deals",
+  "promoBtnLink": "/catalog.html"
 }

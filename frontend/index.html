@@ -83,10 +83,49 @@
           </div>
         </div>
 
-        <!-- Hero Image Column -->
+        <!-- Hero Animated Saree Carousel Column -->
         <div class="home-fade-scale" style="--fade-delay: 220ms">
-          <div class="hero-img-wrap">
-            <img id="hero-image" src="/src/assets/images/sg_garments_hero_1785928650122.jpg" alt="SutoRekha Showroom Collection" class="hero-img" />
+          <div id="hero-carousel-wrap" class="hero-carousel-wrap">
+            
+            <!-- Slide 1: Royal Banarasi Zari Silk Saree -->
+            <div class="hero-slide active">
+              <img src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80" alt="Royal Banarasi Silk Saree" class="hero-slide-img" />
+              <div class="hero-slide-overlay"></div>
+              <div class="hero-slide-caption">
+                <span class="hero-slide-badge font-bengali">রাজকীয় বেনারসী</span>
+                <h4 class="hero-slide-title">Royal Banarasi Zari Silk Saree</h4>
+              </div>
+            </div>
+
+            <!-- Slide 2: Heritage Handwoven Chanderi Saree -->
+            <div class="hero-slide">
+              <img src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80" alt="Heritage Chanderi Saree" class="hero-slide-img" />
+              <div class="hero-slide-overlay"></div>
+              <div class="hero-slide-caption">
+                <span class="hero-slide-badge font-bengali">চান্দেরি সিল্ক</span>
+                <h4 class="hero-slide-title">Heritage Handwoven Chanderi Saree</h4>
+              </div>
+            </div>
+
+            <!-- Slide 3: Handcrafted Zardozi Silk Saree -->
+            <div class="hero-slide">
+              <img src="https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80" alt="Exquisite Zardozi Silk Saree" class="hero-slide-img" />
+              <div class="hero-slide-overlay"></div>
+              <div class="hero-slide-caption">
+                <span class="hero-slide-badge font-bengali">জারদৌসি কাজ</span>
+                <h4 class="hero-slide-title">Exquisite Handcrafted Zardozi Saree</h4>
+              </div>
+            </div>
+
+            <!-- Controls & Indicators -->
+            <button class="carousel-nav-btn carousel-nav-prev" aria-label="Previous Slide">‹</button>
+            <button class="carousel-nav-btn carousel-nav-next" aria-label="Next Slide">›</button>
+            <div class="carousel-indicators">
+              <span class="carousel-dot active"></span>
+              <span class="carousel-dot"></span>
+              <span class="carousel-dot"></span>
+            </div>
+
           </div>
         </div>
 
@@ -94,7 +133,7 @@
     </div>
   </section>
 
-  <!-- Promotional Offer Banner -->
+  <!-- Dynamic Promotional Offer Banner (Editable via Admin Panel) -->
   <section class="promo-banner">
     <div class="container home-fade-up">
       <div class="promo-flex">
@@ -106,12 +145,11 @@
             </svg>
           </div>
           <div>
-            <h3 class="promo-heading font-serif">Festive Special Sale — Up to 37% Off!</h3>
-            <p class="promo-subtext">Enjoy premium ready-to-wear retail garments and doorstep express delivery across
-              India.</p>
+            <h3 id="promo-heading" class="promo-heading font-serif">Festive Special Sale — Up to 37% Off!</h3>
+            <p id="promo-subtext" class="promo-subtext">Enjoy premium ready-to-wear retail garments and doorstep express delivery across India.</p>
           </div>
         </div>
-        <a href="/catalog.html" class="btn btn-primary btn-md">
+        <a id="promo-btn" href="/catalog.html" class="btn btn-primary btn-md">
           View Festive Deals
         </a>
       </div>

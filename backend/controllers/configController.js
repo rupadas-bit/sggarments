@@ -21,7 +21,11 @@ const envDefaults = {
   address: process.env.STORE_ADDRESS || 'Commercial Hub, M.G. Road, Kolkata, West Bengal — 700007',
   hours: process.env.STORE_HOURS || 'Mon – Sat: 10:00 AM – 8:30 PM | Sun: 11:00 AM – 6:00 PM',
   logo: process.env.STORE_LOGO || '',
-  heroImage: process.env.STORE_HERO_IMAGE || ''
+  heroImage: process.env.STORE_HERO_IMAGE || '',
+  promoHeading: process.env.PROMO_HEADING || 'Festive Special Sale — Up to 37% Off!',
+  promoSubtext: process.env.PROMO_SUBTEXT || 'Enjoy premium ready-to-wear retail garments and doorstep express delivery across India.',
+  promoBtnText: process.env.PROMO_BTN_TEXT || 'View Festive Deals',
+  promoBtnLink: process.env.PROMO_BTN_LINK || '/catalog.html'
 };
 
 async function readStoredConfig() {
