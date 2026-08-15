@@ -5,6 +5,7 @@ const path = require('path');
 const Order = require('../models/Order');
 const { isDbConnected, ensureDb } = require('../db');
 const { getStoreConfig } = require('./configController');
+const { sendOrderNotificationEmail } = require('../mailer');
 
 const ordersFilePath = path.join(__dirname, '../data/orders.json');
 const writableOrdersFilePath = process.env.VERCEL
@@ -133,6 +134,11 @@ exports.createOrder = async (req, res) => {
     const orders = await readOrders();
     orders.push(orderRecord);
     await saveOrders(orders);
+
+    // Trigger automated Zoho Mail email notification in background (non-blocking)
+    sendOrderNotificationEmail(orderRecord).catch(err => {
+      console.error('Background order email notification error:', err.message);
+    });
 
     // Construct formatted WhatsApp message for store owner
     let waMsg = `*NEW ORDER SUBMISSION — SUTOREKHA (সূত্ররেখা)*\n`;

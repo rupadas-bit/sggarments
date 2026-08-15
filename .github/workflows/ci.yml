@@ -37,34 +37,42 @@ jobs:
         working-directory: backend
 
       - name: Verify Express app exports a valid handler function
+        env:
+          WORKSPACE: ${{ github.workspace }}
         run: |
           node -e "
+            const path = require('path');
             process.env.MONGODB_URI = '';
-            const app = require('./backend/api/index.js');
+            const app = require(path.join(process.env.WORKSPACE, 'backend/api/index.js'));
             if (typeof app !== 'function') {
-              console.error('❌ backend/api/index.js must export a function (Express app)');
+              console.error('\u274c backend/api/index.js must export a function (Express app)');
               process.exit(1);
             }
-            // Ensure no undefined middleware was registered
             const stack = app._router && app._router.stack;
             if (stack) {
               stack.forEach((layer, i) => {
                 if (!layer.handle || typeof layer.handle !== 'function') {
-                  console.error('❌ Undefined middleware at stack index', i, layer);
+                  console.error('\u274c Undefined middleware at stack index', i, layer);
                   process.exit(1);
                 }
               });
             }
-            console.log('✅ Express app loaded and all middleware handlers are valid functions.');
+            console.log('\u2705 Express app loaded and all middleware handlers are valid functions.');
           "
 
-      - name: Validate vercel.json files
+
+      - name: Validate vercel.json configuration
+        env:
+          WORKSPACE: ${{ github.workspace }}
         run: |
           node -e "
             const fs = require('fs');
-            const be = JSON.parse(fs.readFileSync('./backend/vercel.json','utf8'));
-            const fe = JSON.parse(fs.readFileSync('./frontend/vercel.json','utf8'));
-            if (!be.rewrites || !be.builds) { console.error('❌ backend/vercel.json missing builds or rewrites'); process.exit(1); }
-            if (!fe.rewrites) { console.error('❌ frontend/vercel.json missing rewrites'); process.exit(1); }
-            console.log('✅ Both vercel.json files are valid.');
+            const path = require('path');
+            const file = path.join(process.env.WORKSPACE, 'vercel.json');
+            const vConfig = JSON.parse(fs.readFileSync(file, 'utf8'));
+            if (!vConfig.rewrites || !Array.isArray(vConfig.rewrites)) {
+              console.error('\u274c vercel.json missing rewrites configuration');
+              process.exit(1);
+            }
+            console.log('\u2705 Root vercel.json configuration is valid.');
           "
