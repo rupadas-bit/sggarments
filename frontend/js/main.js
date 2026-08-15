@@ -65,15 +65,91 @@ function updateConfigElements() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const loader = document.getElementById('loading-screen');
-  if (loader) loader.remove();
+  handleSplashLoader();
   renderNavbar();
   renderFooter();
   initHomeScrollAnimations();
+  initHeroTypewriter();
   if (window.initOrderModal) window.initOrderModal();
   setupMobileNav();
   fetchStoreConfig();
 });
+
+function handleSplashLoader() {
+  const loader = document.getElementById('sutorekha-splash-loader') || document.getElementById('loading-screen');
+  if (!loader) return;
+
+  const fill = document.getElementById('splash-progress-fill');
+  const status = document.getElementById('splash-status-text');
+
+  let currentProgress = 0;
+  const progressInterval = setInterval(() => {
+    currentProgress += Math.floor(Math.random() * 20) + 12;
+    if (currentProgress >= 90) currentProgress = 92;
+    if (fill) fill.style.width = `${currentProgress}%`;
+  }, 120);
+
+  const completeAndDismiss = () => {
+    clearInterval(progressInterval);
+    if (fill) fill.style.width = '100%';
+    if (status) status.innerText = 'Welcome to SutoRekha';
+
+    setTimeout(() => {
+      loader.classList.add('fade-out');
+      setTimeout(() => {
+        loader.remove();
+      }, 550);
+    }, 450);
+  };
+
+  if (document.readyState === 'complete') {
+    completeAndDismiss();
+  } else {
+    window.addEventListener('load', completeAndDismiss);
+    setTimeout(completeAndDismiss, 2000);
+  }
+}
+
+function initHeroTypewriter() {
+  const target = document.getElementById('hero-typewriter-text');
+  if (!target) return;
+
+  const phrases = [
+    "Elegance & Style for Every Occasion",
+    "Handcrafted Silk Sarees & Ethnic Grace",
+    "Bespoke Ready-To-Wear Designer Apparel"
+  ];
+  let phraseIdx = 0;
+  let charIdx = 0;
+  let isDeleting = false;
+  let speed = 70;
+
+  function type() {
+    const current = phrases[phraseIdx];
+    if (isDeleting) {
+      target.textContent = current.substring(0, charIdx - 1);
+      charIdx--;
+      speed = 35;
+    } else {
+      target.textContent = current.substring(0, charIdx + 1);
+      charIdx++;
+      speed = 70;
+    }
+
+    if (!isDeleting && charIdx === current.length) {
+      speed = 2200;
+      isDeleting = true;
+    } else if (isDeleting && charIdx === 0) {
+      isDeleting = false;
+      phraseIdx = (phraseIdx + 1) % phrases.length;
+      speed = 350;
+    }
+
+    setTimeout(type, speed);
+  }
+
+  type();
+}
 
 function initHomeScrollAnimations() {
   if (!document.body.classList.contains('home-page')) return;
