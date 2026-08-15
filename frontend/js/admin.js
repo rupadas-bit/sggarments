@@ -1,5 +1,5 @@
 /**
- * Sutorekha (সূত্ররেখা) — Admin Operations & Product Manager Script
+ * SutoRekha — Admin Operations & Product Manager Script
  */
 
 let productsData = [];
@@ -563,7 +563,7 @@ async function handleFormSubmit() {
     fullDescription,
     features,
     specs: {
-      "Brand": "Sutorekha",
+      "Brand": "SutoRekha",
       "Fabric": fabric,
       "Fit": fit,
       "Wash Care": "Dry Clean Recommended"

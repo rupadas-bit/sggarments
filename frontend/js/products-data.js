@@ -14,7 +14,7 @@ const PRODUCTS = [
       "https://images.unsplash.com/photo-1597983073493-88cd35cf03b0?auto=format&fit=crop&w=800&q=80"
     ],
     shortDescription: "Handcrafted Dupion silk kurta featuring intricate thread embroidery on collar and cuffs with matching churidar.",
-    fullDescription: "Elevate your festive wardrobe with the Royal Heritage Kurta Set from Sutorekha (সূত্ররেখা). Crafted from premium Dupion Silk, this set features elegant hand-stitch threadwork along the mandarin collar and front placket. Designed for supreme comfort and regal style, it comes paired with a matching cotton-silk churidar.",
+    fullDescription: "Elevate your festive wardrobe with the Royal Heritage Kurta Set from SutoRekha. Crafted from premium Dupion Silk, this set features elegant hand-stitch threadwork along the mandarin collar and front placket. Designed for supreme comfort and regal style, it comes paired with a matching cotton-silk churidar.",
     features: [
       "Premium Dupion Silk with Soft Pure Cotton Lining",
       "Handcrafted zari thread embroidered mandarin collar & cuffs",
@@ -23,7 +23,7 @@ const PRODUCTS = [
       "Ideal for Weddings, Festivals, and Grand Celebrations"
     ],
     specs: {
-      "Brand": "Sutorekha",
+      "Brand": "SutoRekha",
       "Fabric": "Dupion Silk & Cotton Blend",
       "Pattern": "Embroidered Collar & Placket",
       "Fit": "Regular Fit",
@@ -51,7 +51,7 @@ const PRODUCTS = [
       "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80"
     ],
     shortDescription: "Traditional Banarasi Chanderi silk saree woven with antique gold zari motifs and rich pallu finish.",
-    fullDescription: "Immerse in timeless grace with Sutorekha's Signature Banarasi Chanderi Saree. Features woven antique gold floral jaal work across the drape and a lavish heavy zari pallu. Comes with an unstitched contrast silk blouse piece.",
+    fullDescription: "Immerse in timeless grace with SutoRekha's Signature Banarasi Chanderi Saree. Features woven antique gold floral jaal work across the drape and a lavish heavy zari pallu. Comes with an unstitched contrast silk blouse piece.",
     features: [
       "100% Hand-woven Chanderi Silk Blend",
       "Intricate Gold Zari Jaal & Floral Motifs",
@@ -60,7 +60,7 @@ const PRODUCTS = [
       "Handcrafted by master artisans"
     ],
     specs: {
-      "Brand": "Sutorekha",
+      "Brand": "SutoRekha",
       "Fabric": "Pure Chanderi Silk",
       "Saree Length": "5.5 Meters",
       "Blouse Piece": "0.8 Meter Included",
@@ -96,7 +96,7 @@ const PRODUCTS = [
       "Breathable Satin Lining for Sharp Comfort"
     ],
     specs: {
-      "Brand": "Sutorekha",
+      "Brand": "SutoRekha",
       "Fabric": "Poly-Viscose Premium Suiting",
       "Fit": "Italian Slim Fit",
       "Lapel": "Satin Shawl Collar",
@@ -123,7 +123,7 @@ const PRODUCTS = [
       "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80"
     ],
     shortDescription: "Ultra-breathable 100% organic cotton-linen casual shirt with wooden buttons and regular fit.",
-    fullDescription: "Stay effortlessly stylish in hot weather with Sutorekha's Handloom Cotton Linen Shirt. Pre-washed for superior softness, it features natural wooden accent buttons, a clean spread collar, and a patch chest pocket.",
+    fullDescription: "Stay effortlessly stylish in hot weather with SutoRekha's Handloom Cotton Linen Shirt. Pre-washed for superior softness, it features natural wooden accent buttons, a clean spread collar, and a patch chest pocket.",
     features: [
       "100% Organic Handloom Cotton-Linen Fabric",
       "Pre-shrunk & Bio-washed for extra softness",
@@ -132,7 +132,7 @@ const PRODUCTS = [
       "Breathable weave perfect for tropical heat"
     ],
     specs: {
-      "Brand": "Sutorekha",
+      "Brand": "SutoRekha",
       "Fabric": "60% Linen, 40% Cotton",
       "Fit": "Modern Regular Fit",
       "Sleeve": "Full Sleeve / Convertible",
@@ -168,7 +168,7 @@ const PRODUCTS = [
       "Padded bustline for effortless fitting"
     ],
     specs: {
-      "Brand": "Sutorekha",
+      "Brand": "SutoRekha",
       "Fabric": "Georgette with Shantoon Lining",
       "Work": "Resham Thread & Sequence Embroidery",
       "Length": "52 Inches (Floor Length)",
@@ -204,7 +204,7 @@ const PRODUCTS = [
       "Premium Retail Finish with Breathable Satin Lining"
     ],
     specs: {
-      "Brand": "Sutorekha",
+      "Brand": "SutoRekha",
       "Fabric": "Micro-Velvet & Raw Silk",
       "Occasion": "Groom / Bridal Wedding Wear",
       "Set Includes": "Sherwani, Kurta, Churidar & Stole",

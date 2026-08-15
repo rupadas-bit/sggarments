@@ -1,7 +1,7 @@
 {
   "name": "sutorekha",
   "version": "1.0.0",
-  "description": "Sutorekha (সূত্ররেখা) — local full-stack dev server",
+  "description": "SutoRekha — local full-stack dev server",
   "private": true,
   "scripts": {
     "dev": "node server.js",

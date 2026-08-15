@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (!activeProduct) return;
 
-  document.title = `${activeProduct.name} — সূত্ররেখা (Sutorekha)`;
+  document.title = `${activeProduct.name} — SutoRekha`;
   if (document.getElementById('breadcrumb-product-name')) {
     document.getElementById('breadcrumb-product-name').innerText = activeProduct.name;
   }

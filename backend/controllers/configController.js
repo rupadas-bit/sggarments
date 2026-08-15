@@ -14,7 +14,7 @@ const writableConfigFilePath = process.env.VERCEL
   : configFilePath;
 
 const envDefaults = {
-  storeName: process.env.STORE_NAME || 'সূত্ররেখা (Sutorekha)',
+  storeName: process.env.STORE_NAME || 'SutoRekha',
   whatsappNumber: process.env.STORE_WHATSAPP_NUMBER || '919876543210',
   phone: process.env.STORE_PHONE || '+91 98765 43210',
   email: process.env.STORE_EMAIL || 'support@sutorekha.com',

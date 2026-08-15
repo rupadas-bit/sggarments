@@ -61,7 +61,7 @@ app.get('*', (req, res) => {
 
 function startServer(port) {
   const server = app.listen(port, '0.0.0.0', () => {
-    console.log(`\n  ✅  Sutorekha (সূত্ররেখা) dev server → http://localhost:${port}\n`);
+    console.log(`\n  ✅  SutoRekha dev server → http://localhost:${port}\n`);
   });
 
   server.on('error', (err) => {
