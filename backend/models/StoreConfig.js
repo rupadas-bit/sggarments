@@ -9,7 +9,11 @@ const storeConfigSchema = new mongoose.Schema({
   address: String,
   hours: String,
   logo: String,
-  heroImage: String
-}, { timestamps: true });
+  heroImage: String,
+  promoHeading: String,
+  promoSubtext: String,
+  promoBtnText: String,
+  promoBtnLink: String
+}, { timestamps: true, strict: false });
 
 module.exports = mongoose.models.StoreConfig || mongoose.model('StoreConfig', storeConfigSchema);

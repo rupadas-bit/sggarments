@@ -91,7 +91,10 @@ exports.getConfig = async (req, res) => {
 exports.updateConfig = async (req, res) => {
   try {
     const stored = await readStoredConfig();
-    const allowed = ['storeName', 'whatsappNumber', 'phone', 'email', 'address', 'hours', 'logo', 'heroImage'];
+    const allowed = [
+      'storeName', 'whatsappNumber', 'phone', 'email', 'address', 'hours', 'logo', 'heroImage',
+      'promoHeading', 'promoSubtext', 'promoBtnText', 'promoBtnLink'
+    ];
     const updated = { ...stored };
 
     allowed.forEach(key => {
