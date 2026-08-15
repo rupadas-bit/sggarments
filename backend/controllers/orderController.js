@@ -117,7 +117,7 @@ exports.createOrder = async (req, res) => {
       },
       item: {
         productId,
-        productName: productName || 'SG Garments Apparel Item',
+        productName: productName || 'Sutorekha Apparel Item',
         selectedColor: selectedColor || 'Standard Color',
         selectedSize: selectedSize || 'Standard Size',
         quantity: qty,
@@ -135,7 +135,7 @@ exports.createOrder = async (req, res) => {
     await saveOrders(orders);
 
     // Construct formatted WhatsApp message for store owner
-    let waMsg = `*NEW ORDER SUBMISSION — SG GARMENTS*\n`;
+    let waMsg = `*NEW ORDER SUBMISSION — SUTOREKHA (সূত্ররেখা)*\n`;
     waMsg += `*Order ID:* #${orderId}\n\n`;
     waMsg += `*PRODUCT DETAILS*\n`;
     waMsg += `• *Item:* ${orderRecord.item.productName}\n`;

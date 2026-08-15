@@ -98,7 +98,7 @@ exports.createEnquiry = async (req, res) => {
     enquiries.push(enquiryRecord);
     await saveEnquiries(enquiries);
 
-    const waMsg = `*SG GARMENTS STORE ENQUIRY*\n*ID:* #${enquiryId}\n\nName: ${name}\nPhone: ${cleanPhone}\nEmail: ${email || 'N/A'}\n\n*Message:*\n${message}`;
+    const waMsg = `*SUTOREKHA STORE ENQUIRY (সূত্ররেখা)*\n*ID:* #${enquiryId}\n\nName: ${name}\nPhone: ${cleanPhone}\nEmail: ${email || 'N/A'}\n\n*Message:*\n${message}`;
     const whatsappUrl = `https://wa.me/${storeWhatsapp}?text=${encodeURIComponent(waMsg)}`;
 
     res.status(201).json({

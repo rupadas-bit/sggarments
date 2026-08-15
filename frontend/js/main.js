@@ -1,10 +1,10 @@
 // Main App Logic (Navigation Header & Footer Renderer)
 
 window.STORE_CONFIG = window.STORE_CONFIG || {
-  storeName: 'SG Fashion',
+  storeName: 'সূত্ররেখা (Sutorekha)',
   whatsappNumber: '919876543210',
   phone: '+91 98765 43210',
-  email: 'support@sggarments.com',
+  email: 'support@sutorekha.com',
   address: 'Desh Bandhu Nagar, Baguiati, Kolkata, West Bengal - 700059',
   hours: 'Mon – Sat: 10:00 AM – 8:30 PM | Sun: 11:00 AM – 6:00 PM'
 };
@@ -42,7 +42,7 @@ function updateConfigElements() {
 
   const footerWaBtn = document.querySelector('.footer-wa-btn');
   if (footerWaBtn && config.whatsappNumber) {
-    footerWaBtn.href = `https://wa.me/${config.whatsappNumber}?text=Hello%20SG%20Garments,%20I%20have%20an%20inquiry%20about%20your%20clothing%20collection.`;
+    footerWaBtn.href = `https://wa.me/${config.whatsappNumber}?text=Hello%20Sutorekha,%20I%20have%20an%20inquiry%20about%20your%20clothing%20collection.`;
   }
 
   const brandName = document.querySelector('.footer-brand-name');
@@ -134,14 +134,14 @@ function renderNavbar() {
         <a href="/index.html" class="brand-link">
           <img 
             src="/src/assets/images/luxecraft_brand_logo_1785767720602.jpg" 
-            alt="SG Fashion Logo" 
+            alt="Sutorekha Logo" 
             class="nav-brand-logo"
             hidden
             style="width: 44px; height: 44px; border-radius: var(--radius-full); border: 1.5px solid var(--primary-gold); object-fit: cover;" 
           />
           <div style="display: flex; flex-direction: column;">
-            <span class="brand-title">
-              SG <span>FASHION</span>
+            <span class="brand-title font-bengali">
+              সূত্ররেখা <span class="brand-title-sub">SUTOREKHA</span>
             </span>
             <span class="brand-tagline">
               Quality • Style • Trust
@@ -249,14 +249,14 @@ function renderFooter() {
           <!-- Column 1: Brand Info, About & Copyright -->
           <div class="footer-col footer-brand-col">
             <div class="footer-brand-wrap">
-              <span class="footer-brand-name">SG Fashion</span>
+              <span class="footer-brand-name font-bengali">সূত্ররেখা <span style="font-size:0.8rem; font-family:var(--font-sans); font-weight:500; color:var(--gold-accent);">(Sutorekha)</span></span>
               <span class="footer-brand-tagline">Quality • Style • Trust</span>
             </div>
             <p class="footer-about-text">
               Your trusted destination for premium retail ethnic wear, designer sarees, ready-to-wear formal suits, and modern apparel. Personalized WhatsApp ordering with door delivery.
             </p>
             <div class="footer-copyright-about">
-              © 2026 SG Fashion. All rights reserved.
+              © 2026 সূত্ররেখা (Sutorekha). All rights reserved.
             </div>
           </div>
 
@@ -292,11 +292,11 @@ function renderFooter() {
             </div>
             
             <a 
-              href="https://wa.me/919876543210?text=Hello%20SG%20Garments,%20I%20have%20an%20inquiry%20about%20your%20clothing%20collection." 
+              href="https://wa.me/919876543210?text=Hello%20Sutorekha,%20I%20have%20an%20inquiry%20about%20your%20clothing%20collection." 
               target="_blank" 
               rel="noopener noreferrer" 
               class="btn btn-whatsapp btn-md btn-full footer-wa-btn"
-              aria-label="Chat with SG Fashion on WhatsApp"
+              aria-label="Chat with Sutorekha on WhatsApp"
             >
               <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M.057 24l1.687-6.163c-1.041-1.804-1.804-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l.157.251-1.002 3.659 3.738-.981.25.147z"/>

@@ -381,7 +381,7 @@ async function handleOrderSubmit(e) {
     console.error('Order submission error:', err);
     // Fallback to client-side direct redirect if server request fails
     const targetNumber = (window.STORE_CONFIG && window.STORE_CONFIG.whatsappNumber) ? window.STORE_CONFIG.whatsappNumber : "919876543210";
-    const waMsg = `*NEW ORDER - SG FASHION*\nName: ${fullName}\nPhone: ${phone}\nProduct: ${payload.productName}\nSize: ${selectedSize}\nColor: ${selectedColor}\nQty: ${currentQuantity}`;
+    const waMsg = `*NEW ORDER - SUTOREKHA (সূত্ররেখা)*\nName: ${fullName}\nPhone: ${phone}\nProduct: ${payload.productName}\nSize: ${selectedSize}\nColor: ${selectedColor}\nQty: ${currentQuantity}`;
     window.open(`https://wa.me/${targetNumber}?text=${encodeURIComponent(waMsg)}`, '_blank');
     closeOrderModal();
   } finally {

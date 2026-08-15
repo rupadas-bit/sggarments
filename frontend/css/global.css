@@ -22,6 +22,7 @@
 
     /* Font Families */
     --font-serif: 'Cormorant Garamond', Georgia, serif;
+    --font-bengali: 'Noto Serif Bengali', 'Hind Siliguri', 'Cormorant Garamond', serif;
     --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
     /* Border Radii */
@@ -203,6 +204,10 @@ textarea {
     height: 76px;
 }
 
+.font-bengali {
+    font-family: var(--font-bengali) !important;
+}
+
 .brand-link {
     display: flex;
     align-items: center;
@@ -211,16 +216,25 @@ textarea {
 }
 
 .brand-title {
-    font-size: 1.5rem;
-    font-family: var(--font-serif);
+    font-size: 1.6rem;
+    font-family: var(--font-bengali);
     font-weight: 700;
     color: var(--text-light);
     letter-spacing: -0.01em;
-    line-height: 1.1;
+    line-height: 1.15;
 }
 
 .brand-title span {
     color: var(--primary-gold);
+}
+
+.brand-title-sub {
+    font-family: var(--font-sans);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: var(--gold-accent);
+    margin-left: 0.25rem;
+    font-weight: 700;
 }
 
 .brand-tagline {
@@ -836,11 +850,11 @@ textarea {
 }
 
 .footer-brand-name {
-    font-family: var(--font-serif);
-    font-size: 1.375rem;
+    font-family: var(--font-bengali);
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--gold-accent);
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em;
     line-height: 1.2;
 }
 

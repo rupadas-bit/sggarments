@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => {
         console.error('Enquiry submission error:', err);
         const targetNumber = (window.STORE_CONFIG && window.STORE_CONFIG.whatsappNumber) ? window.STORE_CONFIG.whatsappNumber : '919876543210';
-        const waMsg = `*SG FASHION STORE ENQUIRY*\n\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\n\n*Query:*\n${message}`;
+        const waMsg = `*SUTOREKHA STORE ENQUIRY (সূত্ররেখা)*\n\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\n\n*Query:*\n${message}`;
         window.open(`https://wa.me/${targetNumber}?text=${encodeURIComponent(waMsg)}`, '_blank');
         contactForm.reset();
       })

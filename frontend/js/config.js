@@ -1,5 +1,5 @@
 /**
- * SG Fashion — Frontend API Configuration
+ * Sutorekha (সূত্ররেখা) — Frontend API Configuration
  *
  * DEFAULT: Set your Vercel backend URL in OVERRIDE_API_BASE_URL (without trailing slash).
  * LOCAL: Uses relative paths ('') automatically when testing on localhost.

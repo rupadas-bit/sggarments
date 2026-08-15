@@ -1,5 +1,5 @@
 /**
- * SG Garments — Admin Operations & Product Manager Script
+ * Sutorekha (সূত্ররেখা) — Admin Operations & Product Manager Script
  */
 
 let productsData = [];
@@ -563,7 +563,7 @@ async function handleFormSubmit() {
     fullDescription,
     features,
     specs: {
-      "Brand": "SG Garments",
+      "Brand": "Sutorekha",
       "Fabric": fabric,
       "Fit": fit,
       "Wash Care": "Dry Clean Recommended"

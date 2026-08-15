@@ -14,10 +14,10 @@ const writableConfigFilePath = process.env.VERCEL
   : configFilePath;
 
 const envDefaults = {
-  storeName: process.env.STORE_NAME || 'SG Fashion',
+  storeName: process.env.STORE_NAME || 'সূত্ররেখা (Sutorekha)',
   whatsappNumber: process.env.STORE_WHATSAPP_NUMBER || '919876543210',
   phone: process.env.STORE_PHONE || '+91 98765 43210',
-  email: process.env.STORE_EMAIL || 'support@sggarments.com',
+  email: process.env.STORE_EMAIL || 'support@sutorekha.com',
   address: process.env.STORE_ADDRESS || 'Commercial Hub, M.G. Road, Kolkata, West Bengal — 700007',
   hours: process.env.STORE_HOURS || 'Mon – Sat: 10:00 AM – 8:30 PM | Sun: 11:00 AM – 6:00 PM',
   logo: process.env.STORE_LOGO || '',
